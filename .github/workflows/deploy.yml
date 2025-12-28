@@ -13,11 +13,11 @@ jobs:
        with:
          username: ${{ secrets.DOCKERHUB_USERNAME }}
          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-     - run: docker build -t single . && docker tag single:latest mevanmanilka/single:latest && docker push mevanmanilka/single:latest
-     - run: docker build -t cygnetops/react-test -f Dockerfile.dev .
+     - run: docker build -t single ./frontend && docker tag single:latest mevanmanilka/single:latest && docker push mevanmanilka/single:latest
+     - run: docker build -t cygnetops/react-test -f ./frontend/Dockerfile.dev ./frontend
      - run: docker run -e CI=true cygnetops/react-test npm test
      - name: Generate deployment package
-       run: zip -r deployment-package.zip -x *.git*
+       run: cd frontend && zip -r ../deployment-package.zip . -x '*.git*'
 
      - name: Upload to EB
        uses: einaregilsson/beanstalk-deploy@v20
