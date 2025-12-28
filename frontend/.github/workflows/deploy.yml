@@ -8,5 +8,20 @@ jobs:
    runs-on: ubuntu-latest
    steps:
      - uses: actions/checkout@v2
-     - name: Deploy
-       run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }} && docker build -t single . && docker tag single:latest mevanmanilka/single:latest && docker push mevanmanilka/single:latest
+     - run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }} && docker build -t single . && docker tag single:latest mevanmanilka/single:latest && docker push mevanmanilka/single:latest
+     - run: docker build -t cygnetops/react-test -f Dockerfile.Dockerfile.dev
+     - run: docker run -e CI=true cygnetops/react-test npm test
+     - name: Generate deployment package
+       run: zip -r deployment-package.zip -x *.git*
+
+     - name: Upload to EB
+       uses: einaregilsson/beanstalk-deploy@v20
+       with:
+         aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+         aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+         application_name: "single"
+         environment_name: "Single-env"
+         existing_bucket_name: "elasticbeanstalk-us-east-1-724084651959"
+         region: "us-east-1"
+         version_label: "v-${{ github.run_number }}"
+         deployment_package: "deployment-package.zip"
